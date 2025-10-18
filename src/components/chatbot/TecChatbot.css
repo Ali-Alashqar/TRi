@@ -1,0 +1,474 @@
+/* Tec Chatbot Styles - Ultra Modern Design */
+
+/* Floating Button */
+.tec-chatbot-button {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 102, 255, 0.4);
+  z-index: 9999;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tec-chatbot-button:hover {
+  box-shadow: 0 12px 48px rgba(0, 102, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.tec-button-icon {
+  color: white;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.tec-button-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff, #0066ff, #00d4ff);
+  background-size: 200% 200%;
+  animation: tec-glow-rotate 3s linear infinite;
+  opacity: 0.6;
+  filter: blur(8px);
+}
+
+.tec-button-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+}
+
+@keyframes tec-glow-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Chat Window */
+.tec-chatbot-window {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 420px;
+  height: 650px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 9998;
+  backdrop-filter: blur(20px);
+}
+
+/* Header */
+.tec-chatbot-header {
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(0, 102, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.tec-chatbot-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: tec-header-shimmer 4s linear infinite;
+}
+
+@keyframes tec-header-shimmer {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.tec-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+}
+
+.tec-bot-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tec-avatar-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: white;
+}
+
+.tec-bot-info {
+  color: white;
+}
+
+.tec-bot-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tec-sparkle {
+  color: #ffd700;
+  animation: tec-sparkle 2s ease-in-out infinite;
+}
+
+@keyframes tec-sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2) rotate(180deg);
+  }
+}
+
+.tec-bot-status {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.tec-close-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 1;
+}
+
+.tec-close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* Messages */
+.tec-chatbot-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+}
+
+.tec-chatbot-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tec-chatbot-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tec-chatbot-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+  border-radius: 3px;
+}
+
+.tec-message {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.tec-message-user {
+  flex-direction: row-reverse;
+}
+
+.tec-message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 102, 255, 0.3);
+}
+
+.tec-message-bubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  position: relative;
+  animation: tec-message-appear 0.3s ease-out;
+}
+
+@keyframes tec-message-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tec-message-bot .tec-message-bubble {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-bottom-left-radius: 4px;
+}
+
+.tec-message-user .tec-message-bubble {
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 102, 255, 0.3);
+}
+
+.tec-message-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.tec-message-time {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.6;
+}
+
+/* Typing Indicator */
+.tec-typing-indicator {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tec-typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+  animation: tec-typing 1.4s infinite;
+}
+
+.tec-typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.tec-typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes tec-typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+/* Input */
+.tec-chatbot-input {
+  padding: 16px 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.tec-input-field {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  max-height: 120px;
+  transition: all 0.2s;
+  background: #f9fafb;
+}
+
+.tec-input-field:focus {
+  outline: none;
+  border-color: #0066ff;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.tec-input-field::placeholder {
+  color: #9ca3af;
+}
+
+.tec-send-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+}
+
+.tec-send-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4);
+}
+
+.tec-send-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tec-send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Footer */
+.tec-chatbot-footer {
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.tec-chatbot-footer p {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tec-chatbot-window {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .tec-chatbot-button {
+    left: 16px;
+    bottom: 16px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .tec-button-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .tec-chatbot-window {
+    background: linear-gradient(to bottom, #1f2937, #111827);
+  }
+
+  .tec-chatbot-messages {
+    background: linear-gradient(to bottom, #1f2937, #111827);
+  }
+
+  .tec-message-bot .tec-message-bubble {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .tec-typing-indicator {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .tec-chatbot-input {
+    background: #1f2937;
+    border-top-color: #374151;
+  }
+
+  .tec-input-field {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .tec-input-field:focus {
+    background: #4b5563;
+  }
+
+  .tec-chatbot-footer {
+    background: #1f2937;
+    border-top-color: #374151;
+  }
+}
+
