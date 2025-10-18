@@ -9,7 +9,7 @@
     "start": "npm install && node server.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node server.js",
+    "server": "node server.js"
   },
   "engines": {
     "node": ">=18.0.0",
