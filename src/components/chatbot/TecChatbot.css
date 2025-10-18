@@ -132,6 +132,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.tec-bot-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.tec-message-bot-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .tec-avatar-pulse {
   position: absolute;
   inset: -4px;
@@ -407,6 +419,21 @@
   color: #6b7280;
 }
 
+.tec-developed-by {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.tec-developed-by:hover {
+  opacity: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .tec-chatbot-window {
@@ -473,4 +500,6 @@
     border-top-color: #374151;
   }
 }
+
+
 

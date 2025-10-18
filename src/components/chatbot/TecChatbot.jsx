@@ -150,7 +150,7 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
             <div className="tec-chatbot-header">
               <div className="tec-header-content">
                 <div className="tec-bot-avatar">
-                  <Bot size={24} />
+                  <img src="/tec_avatar.png" alt="Tec Bot Icon" className="tec-bot-icon" />
                   <motion.div
                     className="tec-avatar-pulse"
                     animate={{
@@ -198,7 +198,7 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
                   >
                     {message.sender === 'bot' && (
                       <div className="tec-message-avatar">
-                        <Bot size={18} />
+                        <img src="/tec_avatar.png" alt="Tec Bot Icon" className="tec-message-bot-icon" />
                       </div>
                     )}
                     <div className="tec-message-bubble">
@@ -222,7 +222,7 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
                   className="tec-message tec-message-bot"
                 >
                   <div className="tec-message-avatar">
-                    <Bot size={18} />
+                    <img src="/tec_avatar.png" alt="Tec Bot Icon" className="tec-message-bot-icon" />
                   </div>
                   <div className="tec-typing-indicator">
                     <span></span>
@@ -262,7 +262,8 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
 
             {/* Footer */}
             <div className="tec-chatbot-footer">
-              <p>مدعوم بالذكاء الاصطناعي • جامعة عمان العربية</p>
+              <p>Powered by AI • Amman Arab University</p>
+              <p className="tec-developed-by">Developed by TechNest</p>
             </div>
           </motion.div>
         )}
