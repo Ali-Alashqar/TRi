@@ -1,16 +1,16 @@
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import cors from 'cors';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import mongoose from 'mongoose';
-import { SiteData, Project, Message, Application, ProjectSubmission, User, Visitor, Rating, TestimonialSubmission, LiveNotification } from './models.js';
+const express = require('express');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const fs = require('fs');
+const mongoose = require('mongoose');
+const { SiteData, Project, Message, Application, ProjectSubmission, User, Visitor, Rating, TestimonialSubmission, LiveNotification } = require('./models.js');
+
+
+
 
 const app = express();
 const httpServer = createServer(app);
