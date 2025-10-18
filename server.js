@@ -1173,10 +1173,13 @@ app.put('/api/chatbot/settings', async (req, res) => {
   }
 });
 
-// Chatbot message endpoint with keyword-based matching (FREE)
+// Chatbot message endpoint with AI Agent (SMART)
+const { spawn } = require('child_process');
+const chatSessions = new Map();
+
 app.post('/api/chatbot/message', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, sessionId } = req.body;
     
     // Check if chatbot is enabled
     const siteData = await SiteData.findOne();
@@ -1184,38 +1187,38 @@ app.post('/api/chatbot/message', async (req, res) => {
       return res.json({ response: 'عذراً، الشات بوت غير متاح حالياً.' });
     }
 
-    // Load knowledge base
-    const knowledgeBase = JSON.parse(fs.readFileSync(path.join(__dirname, 'chatbot-knowledge.json'), 'utf8'));
-    
-    // Normalize message for better matching
-    const normalizedMessage = message.toLowerCase().trim();
-    
-    // Find matching category based on keywords
-    let bestMatch = null;
-    let highestScore = 0;
-    
-    for (const [category, data] of Object.entries(knowledgeBase)) {
-      if (category === 'default') continue;
-      
-      const keywords = data.keywords || [];
-      let score = 0;
-      
-      // Count matching keywords
-      for (const keyword of keywords) {
-        if (normalizedMessage.includes(keyword.toLowerCase())) {
-          score++;
+    // Use AI Agent
+    const python = spawn('python3.11', [
+      path.join(__dirname, 'ai_agent_cli.py'),
+      message
+    ]);
+
+    let dataString = '';
+    let errorString = '';
+
+    python.stdout.on('data', (data) => {
+      dataString += data.toString();
+    });
+
+    python.stderr.on('data', (data) => {
+      errorString += data.toString();
+    });
+
+    python.on('close', (code) => {
+      if (code === 0 && dataString) {
+        try {
+          const result = JSON.parse(dataString);
+          res.json({ response: result.response, sessionId: result.sessionId });
+        } catch (e) {
+          res.json({ response: dataString.trim() });
         }
+      } else {
+        console.error('AI Agent error:', errorString);
+        res.json({
+          response: 'عذراً، أنا غير قادر على الإجابة في الوقت الحالي. يرجى الاتصال بالجامعة على الرقم 0798877440 للمساعدة.',
+        });
       }
-      
-      if (score > highestScore) {
-        highestScore = score;
-        bestMatch = data.response;
-      }
-    }
-    
-    // Return best match or default response
-    const response = bestMatch || knowledgeBase.default.response;
-    res.json({ response });
+    });
     
   } catch (error) {
     console.error('Chatbot error:', error);
