@@ -9,7 +9,10 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,6 +36,26 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
     }
   }, [isOpen]);
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -49,7 +72,13 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
     setIsLoading(true);
 
     try {
-      // Send message to backend API
+      // Prepare conversation history for context
+      const conversationHistory = messages.map((msg) => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text,
+      }));
+
+      // Send message to backend API with conversation history
       const response = await fetch(`${apiUrl}/api/chatbot/message`, {
         method: 'POST',
         headers: {
@@ -57,6 +86,8 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
         },
         body: JSON.stringify({
           message: inputMessage,
+          conversationHistory: conversationHistory,
+          imageUrl: imagePreview || null,
         }),
       });
 

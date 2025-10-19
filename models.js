@@ -503,3 +503,39 @@ export const Visitor = mongoose.model('Visitor', VisitorSchema);
 export const Rating = mongoose.model('Rating', RatingSchema);
 export const TestimonialSubmission = mongoose.model('TestimonialSubmission', TestimonialSubmissionSchema);
 export const LiveNotification = mongoose.model('LiveNotification', LiveNotificationSchema);
+
+// Chatbot Conversation Schema - For storing chatbot conversations
+const ChatbotConversationSchema = new Schema({
+  userMessage: { type: String, required: true },
+  botResponse: { type: String, required: true },
+  imageUrl: String,
+  imageAnalysis: String,
+  sentiment: { type: String, enum: ['positive', 'neutral', 'negative'], default: 'neutral' },
+  rating: { type: Number, min: 1, max: 5 },
+  userFeedback: String,
+  isUsefulForTraining: { type: Boolean, default: true },
+  category: String,
+  sessionId: String,
+  userId: String,
+  userEmail: String,
+  ipAddress: String,
+  responseTime: Number,
+  modelUsed: { type: String, default: 'gpt-4.1-mini' },
+  conversationContext: [{
+    role: { type: String, enum: ['user', 'bot'] },
+    message: String,
+    timestamp: { type: Date, default: Date.now }
+  }],
+  metadata: {
+    browser: String,
+    device: String,
+    language: String,
+    source: String
+  },
+  flaggedForReview: { type: Boolean, default: false },
+  reviewNotes: String,
+  date: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+export const ChatbotConversation = mongoose.model('ChatbotConversation', ChatbotConversationSchema);
+

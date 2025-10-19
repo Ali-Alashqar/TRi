@@ -7,7 +7,7 @@ const path = require('path');
 
 const fs = require('fs');
 const mongoose = require('mongoose');
-const { SiteData, Project, Message, Application, ProjectSubmission, User, Visitor, Rating, TestimonialSubmission, LiveNotification } = require('./models.js');
+const { SiteData, Project, Message, Application, ProjectSubmission, User, Visitor, Rating, TestimonialSubmission, LiveNotification, ChatbotConversation } = require('./models.js');
 
 
 
@@ -1179,7 +1179,8 @@ const chatSessions = new Map();
 
 app.post('/api/chatbot/message', async (req, res) => {
   try {
-    const { message, sessionId } = req.body;
+    const { message, sessionId, imageUrl, conversationHistory } = req.body;
+    const startTime = Date.now();
     
     // Check if chatbot is enabled
     const siteData = await SiteData.findOne();
@@ -1187,11 +1188,20 @@ app.post('/api/chatbot/message', async (req, res) => {
       return res.json({ response: 'عذراً، الشات بوت غير متاح حالياً.' });
     }
 
-    // Use AI Agent
-    const python = spawn('python3.11', [
-      path.join(__dirname, 'ai_agent_cli.py'),
-      message
-    ]);
+    // Prepare conversation history for AI agent
+    let historyJson = null;
+    if (conversationHistory && conversationHistory.length > 0) {
+      // Convert conversation history to the format expected by AI agent
+      historyJson = JSON.stringify(conversationHistory);
+    }
+
+    // Use AI Agent with conversation history
+    const pythonArgs = [path.join(__dirname, 'ai_agent_cli.py'), message];
+    if (historyJson) {
+      pythonArgs.push(historyJson);
+    }
+    
+    const python = spawn('python3.11', pythonArgs);
 
     let dataString = '';
     let errorString = '';
@@ -1204,20 +1214,44 @@ app.post('/api/chatbot/message', async (req, res) => {
       errorString += data.toString();
     });
 
-    python.on('close', (code) => {
+    python.on('close', async (code) => {
+      const responseTime = Date.now() - startTime;
+      let botResponse = '';
+      
       if (code === 0 && dataString) {
         try {
           const result = JSON.parse(dataString);
-          res.json({ response: result.response, sessionId: result.sessionId });
+          botResponse = result.response;
         } catch (e) {
-          res.json({ response: dataString.trim() });
+          botResponse = dataString.trim();
         }
       } else {
         console.error('AI Agent error:', errorString);
-        res.json({
-          response: 'عذراً، أنا غير قادر على الإجابة في الوقت الحالي. يرجى الاتصال بالجامعة على الرقم 0798877440 للمساعدة.',
-        });
+        botResponse = 'عذراً، أنا غير قادر على الإجابة في الوقت الحالي. يرجى الاتصال بالجامعة على الرقم 0798877440 للمساعدة.';
       }
+
+      // Save conversation to database
+      try {
+        const conversation = new ChatbotConversation({
+          userMessage: message,
+          botResponse: botResponse,
+          imageUrl: imageUrl || null,
+          sessionId: sessionId || null,
+          responseTime: responseTime,
+          ipAddress: req.ip || req.connection.remoteAddress,
+          conversationContext: conversationHistory || [],
+          metadata: {
+            browser: req.headers['user-agent'] || 'Unknown',
+            language: req.headers['accept-language'] || 'ar',
+            source: 'website'
+          }
+        });
+        await conversation.save();
+      } catch (dbError) {
+        console.error('Error saving conversation:', dbError);
+      }
+
+      res.json({ response: botResponse, sessionId: sessionId, conversationHistory: conversationHistory || [] });
     });
     
   } catch (error) {
@@ -1313,5 +1347,146 @@ const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+
+
+// ===== CHATBOT CONVERSATIONS API =====
+
+// Get all chatbot conversations
+app.get('/api/chatbot/conversations', async (req, res) => {
+  try {
+    const { page = 1, limit = 20, sortBy = 'date', order = -1 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const conversations = await ChatbotConversation.find()
+      .sort({ [sortBy]: order })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await ChatbotConversation.countDocuments();
+
+    res.json({
+      conversations,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching conversations:', error);
+    res.status(500).json({ error: 'Failed to fetch conversations' });
+  }
+});
+
+// Get conversation statistics
+app.get('/api/chatbot/conversations/stats', async (req, res) => {
+  try {
+    const total = await ChatbotConversation.countDocuments();
+    const avgResponseTime = await ChatbotConversation.aggregate([
+      { $group: { _id: null, avgTime: { $avg: '$responseTime' } } }
+    ]);
+
+    const conversationsWithImages = await ChatbotConversation.countDocuments({ imageUrl: { $exists: true, $ne: null } });
+
+    res.json({
+      totalConversations: total,
+      conversationsWithImages,
+      averageResponseTime: avgResponseTime[0]?.avgTime || 0
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+// Get single conversation
+app.get('/api/chatbot/conversations/:id', async (req, res) => {
+  try {
+    const conversation = await ChatbotConversation.findById(req.params.id);
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    res.json(conversation);
+  } catch (error) {
+    console.error('Error fetching conversation:', error);
+    res.status(500).json({ error: 'Failed to fetch conversation' });
+  }
+});
+
+// Update conversation (for rating, feedback, etc.)
+app.put('/api/chatbot/conversations/:id', async (req, res) => {
+  try {
+    const { rating, userFeedback, isUsefulForTraining, flaggedForReview, reviewNotes } = req.body;
+    
+    const conversation = await ChatbotConversation.findByIdAndUpdate(
+      req.params.id,
+      {
+        rating,
+        userFeedback,
+        isUsefulForTraining,
+        flaggedForReview,
+        reviewNotes
+      },
+      { new: true }
+    );
+
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error('Error updating conversation:', error);
+    res.status(500).json({ error: 'Failed to update conversation' });
+  }
+});
+
+// Delete conversation
+app.delete('/api/chatbot/conversations/:id', async (req, res) => {
+  try {
+    const conversation = await ChatbotConversation.findByIdAndDelete(req.params.id);
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    res.json({ message: 'Conversation deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting conversation:', error);
+    res.status(500).json({ error: 'Failed to delete conversation' });
+  }
+});
+
+// Search conversations
+app.get('/api/chatbot/conversations/search/:query', async (req, res) => {
+  try {
+    const { query } = req.params;
+    const conversations = await ChatbotConversation.find({
+      $or: [
+        { userMessage: { $regex: query, $options: 'i' } },
+        { botResponse: { $regex: query, $options: 'i' } }
+      ]
+    }).limit(50);
+
+    res.json(conversations);
+  } catch (error) {
+    console.error('Error searching conversations:', error);
+    res.status(500).json({ error: 'Failed to search conversations' });
+  }
+});
+
+// Export conversations for training
+app.get('/api/chatbot/conversations/export/json', async (req, res) => {
+  try {
+    const conversations = await ChatbotConversation.find({ isUsefulForTraining: true });
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="chatbot-conversations.json"');
+    res.json(conversations);
+  } catch (error) {
+    console.error('Error exporting conversations:', error);
+    res.status(500).json({ error: 'Failed to export conversations' });
+  }
 });
 

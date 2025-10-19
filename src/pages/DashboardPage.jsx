@@ -107,6 +107,10 @@ export default function DashboardPage({ siteData, apiUrl }) {
             <Phone size={20} />
             <span>Contact Settings</span>
           </Link>
+          <Link to="/dashboard/chatbot-conversations" className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-muted transition-colors">
+            <MessageSquare size={20} />
+            <span>Chatbot Conversations</span>
+          </Link>
           <Link to="/dashboard/settings" className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-muted transition-colors">
             <Settings size={20} />
             <span>Settings</span>
@@ -137,6 +141,7 @@ export default function DashboardPage({ siteData, apiUrl }) {
           <Route path="/ratings" element={<RatingsContent apiUrl={apiUrl} toast={toast} />} />
           <Route path="/visitors" element={<VisitorsContent apiUrl={apiUrl} toast={toast} />} />
           <Route path="/contact-settings" element={<ContactSettingsContent siteData={siteData} apiUrl={apiUrl} toast={toast} />} />
+          <Route path="/chatbot-conversations" element={<ChatbotConversationsContent apiUrl={apiUrl} toast={toast} />} />
           <Route path="/settings" element={<SettingsContent siteData={siteData} apiUrl={apiUrl} toast={toast} />} />
         </Routes>
       </div>
@@ -3176,4 +3181,283 @@ function ContactSettingsContent({ siteData, apiUrl, toast }) {
   );
 }
 
+
+
+
+
+// Chatbot Conversations Management
+function ChatbotConversationsContent({ apiUrl, toast }) {
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [stats, setStats] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  useEffect(() => {
+    fetchConversations();
+    fetchStats();
+  }, [page]);
+
+  const fetchConversations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${apiUrl}/api/chatbot/conversations?page=${page}&limit=20`);
+      const data = await response.json();
+      setConversations(data.conversations);
+      setTotalPages(data.pagination.pages);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch conversations',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/api/chatbot/conversations/stats`);
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      fetchConversations();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${apiUrl}/api/chatbot/conversations/search/${searchQuery}`);
+      const data = await response.json();
+      setConversations(data);
+    } catch (error) {
+      console.error('Error searching conversations:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to search conversations',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteConversation = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this conversation?')) return;
+
+    try {
+      await fetch(`${apiUrl}/api/chatbot/conversations/${id}`, { method: 'DELETE' });
+      toast({
+        title: 'Success',
+        description: 'Conversation deleted successfully'
+      });
+      fetchConversations();
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete conversation',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/api/chatbot/conversations/export/json`);
+      const data = await response.json();
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chatbot-conversations-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast({
+        title: 'Success',
+        description: 'Conversations exported successfully'
+      });
+    } catch (error) {
+      console.error('Error exporting conversations:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to export conversations',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Chatbot Conversations</h1>
+        <p className="text-muted-foreground mt-2">View and manage all chatbot interactions</p>
+      </div>
+
+      {/* Statistics */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-sm font-medium text-muted-foreground">Total Conversations</h3>
+            <p className="text-3xl font-bold mt-2">{stats.totalConversations}</p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-sm font-medium text-muted-foreground">With Images</h3>
+            <p className="text-3xl font-bold mt-2">{stats.conversationsWithImages}</p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-sm font-medium text-muted-foreground">Avg Response Time</h3>
+            <p className="text-3xl font-bold mt-2">{Math.round(stats.averageResponseTime)}ms</p>
+          </div>
+        </div>
+      )}
+
+      {/* Search and Export */}
+      <div className="flex gap-4">
+        <div className="flex-1 flex gap-2">
+          <Input
+            placeholder="Search conversations..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button onClick={handleSearch}>Search</Button>
+        </div>
+        <Button onClick={handleExport} variant="outline">
+          Export JSON
+        </Button>
+      </div>
+
+      {/* Conversations Table */}
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground">Loading conversations...</div>
+        ) : conversations.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">No conversations found</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-border bg-muted/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-medium">User Message</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium">Bot Response</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium">Date</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium">Response Time</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {conversations.map((conv) => (
+                  <tr key={conv._id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                    <td className="px-6 py-3 text-sm">
+                      <div className="max-w-xs truncate">{conv.userMessage}</div>
+                    </td>
+                    <td className="px-6 py-3 text-sm">
+                      <div className="max-w-xs truncate">{conv.botResponse}</div>
+                    </td>
+                    <td className="px-6 py-3 text-sm">
+                      {new Date(conv.date).toLocaleDateString('ar-JO')}
+                    </td>
+                    <td className="px-6 py-3 text-sm">{conv.responseTime}ms</td>
+                    <td className="px-6 py-3 text-sm space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedConversation(conv);
+                          setShowDetailModal(true);
+                        }}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteConversation(conv._id)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Conversation Details</DialogTitle>
+          </DialogHeader>
+          {selectedConversation && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold mb-2">User Message</h3>
+                <p className="bg-muted p-3 rounded-lg text-sm">{selectedConversation.userMessage}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Bot Response</h3>
+                <p className="bg-muted p-3 rounded-lg text-sm">{selectedConversation.botResponse}</p>
+              </div>
+              {selectedConversation.imageUrl && (
+                <div>
+                  <h3 className="font-semibold mb-2">Image</h3>
+                  <img src={selectedConversation.imageUrl} alt="Conversation" className="max-w-full rounded-lg" />
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Response Time</p>
+                  <p className="font-semibold">{selectedConversation.responseTime}ms</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Date</p>
+                  <p className="font-semibold">{new Date(selectedConversation.date).toLocaleString('ar-JO')}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
 
