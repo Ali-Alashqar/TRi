@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Bot, Loader2, Sparkles } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, Loader2, Sparkles, Image as ImageIcon, Trash2 } from 'lucide-react';
 import './TecChatbot.css';
 
 const TecChatbot = ({ apiUrl, isEnabled = true }) => {
@@ -64,6 +64,7 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
       text: inputMessage,
       sender: 'user',
       timestamp: new Date(),
+      image: imagePreview || null,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -78,6 +79,10 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
         content: msg.text,
       }));
 
+      // Clear image preview after sending
+      const sentImage = imagePreview;
+      removeImage();
+
       // Send message to backend API with conversation history
       const response = await fetch(`${apiUrl}/api/chatbot/message`, {
         method: 'POST',
@@ -87,7 +92,7 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
         body: JSON.stringify({
           message: inputMessage,
           conversationHistory: conversationHistory,
-          imageUrl: imagePreview || null,
+          imageUrl: sentImage || null,
         }),
       });
 
@@ -100,6 +105,7 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
           text: data.response || 'عذراً، لم أتمكن من فهم سؤالك. يرجى المحاولة مرة أخرى.',
           sender: 'bot',
           timestamp: new Date(),
+          image: null,
         };
 
         setMessages((prev) => [...prev, botMessage]);
@@ -115,6 +121,7 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
           text: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى لاحقاً.',
           sender: 'bot',
           timestamp: new Date(),
+          image: null,
         };
 
         setMessages((prev) => [...prev, errorMessage]);
@@ -233,6 +240,9 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
                       </div>
                     )}
                     <div className="tec-message-bubble">
+                      {message.image && (
+                        <img src={message.image} alt="Message" className="tec-message-image" />
+                      )}
                       <p className="tec-message-text">{message.text}</p>
                       <span className="tec-message-time">
                         {message.timestamp.toLocaleTimeString('ar-JO', {
@@ -266,8 +276,46 @@ const TecChatbot = ({ apiUrl, isEnabled = true }) => {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Image Preview */}
+            {imagePreview && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="tec-image-preview"
+              >
+                <div className="tec-preview-container">
+                  <img src={imagePreview} alt="Selected" className="tec-preview-image" />
+                  <button
+                    onClick={removeImage}
+                    className="tec-remove-image-btn"
+                    aria-label="Remove image"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Input */}
             <div className="tec-chatbot-input">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                style={{ display: 'none' }}
+                aria-label="Upload image"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="tec-image-button"
+                disabled={isLoading}
+                aria-label="Upload image"
+                title="رفع صورة"
+              >
+                <ImageIcon size={20} />
+              </button>
               <textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}

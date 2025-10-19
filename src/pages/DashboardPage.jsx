@@ -3439,7 +3439,21 @@ function ChatbotConversationsContent({ apiUrl, toast }) {
               </div>
               {selectedConversation.imageUrl && (
                 <div>
-                  <h3 className="font-semibold mb-2">Image</h3>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold">Image</h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = selectedConversation.imageUrl;
+                        link.download = `chatbot-image-${selectedConversation._id}.jpg`;
+                        link.click();
+                      }}
+                    >
+                      Download
+                    </Button>
+                  </div>
                   <img src={selectedConversation.imageUrl} alt="Conversation" className="max-w-full rounded-lg" />
                 </div>
               )}

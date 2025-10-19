@@ -1195,10 +1195,13 @@ app.post('/api/chatbot/message', async (req, res) => {
       historyJson = JSON.stringify(conversationHistory);
     }
 
-    // Use AI Agent with conversation history
+    // Use AI Agent with conversation history and image data
     const pythonArgs = [path.join(__dirname, 'ai_agent_cli.py'), message];
     if (historyJson) {
       pythonArgs.push(historyJson);
+    }
+    if (imageUrl) {
+      pythonArgs.push(imageUrl);
     }
     
     const python = spawn('python3.11', pythonArgs);
@@ -1236,6 +1239,7 @@ app.post('/api/chatbot/message', async (req, res) => {
           userMessage: message,
           botResponse: botResponse,
           imageUrl: imageUrl || null,
+          imageAnalysis: imageUrl ? 'Image uploaded and analyzed' : null,
           sessionId: sessionId || null,
           responseTime: responseTime,
           ipAddress: req.ip || req.connection.remoteAddress,
@@ -1243,7 +1247,8 @@ app.post('/api/chatbot/message', async (req, res) => {
           metadata: {
             browser: req.headers['user-agent'] || 'Unknown',
             language: req.headers['accept-language'] || 'ar',
-            source: 'website'
+            source: 'website',
+            hasImage: !!imageUrl
           }
         });
         await conversation.save();

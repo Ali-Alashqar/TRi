@@ -522,7 +522,8 @@ const ChatbotConversationSchema = new Schema({
   responseTime: Number,
   modelUsed: { type: String, default: 'gpt-4.1-mini' },
   conversationContext: [{
-    role: { type: String, enum: ['user', 'bot'] },
+    role: { type: String, enum: ['user', 'bot', 'assistant'], default: 'user' },
+    content: String,
     message: String,
     timestamp: { type: Date, default: Date.now }
   }],

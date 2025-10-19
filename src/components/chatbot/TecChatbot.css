@@ -498,8 +498,143 @@
   .tec-chatbot-footer {
     background: #1f2937;
     border-top-color: #374151;
+    color: #d1d5db;
+  }
+
+  .tec-image-button {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  }
+
+  .tec-image-button:hover:not(:disabled) {
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+  }
+
+  .tec-send-button {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  }
+
+  .tec-send-button:hover:not(:disabled) {
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+  }
+
+  .tec-chatbot-button {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  }
+
+  .tec-chatbot-button:hover {
+    box-shadow: 0 12px 48px rgba(59, 130, 246, 0.6);
   }
 }
 
 
+
+
+
+/* Image Upload Styles */
+.tec-image-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+}
+
+.tec-image-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+}
+
+.tec-image-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tec-image-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Image Preview */
+.tec-image-preview {
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tec-preview-container {
+  position: relative;
+  display: inline-block;
+  max-width: 150px;
+}
+
+.tec-preview-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+}
+
+.tec-remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.tec-remove-image-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Dark mode for image preview */
+@media (prefers-color-scheme: dark) {
+  .tec-image-preview {
+    background: #1f2937;
+    border-top-color: #374151;
+    border-bottom-color: #374151;
+  }
+
+  .tec-preview-image {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+}
+
+
+
+
+/* Message Image Styles */
+.tec-message-image {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tec-message-image {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+}
 
