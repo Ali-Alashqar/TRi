@@ -169,7 +169,7 @@ const ProjectSchema = new Schema({
   releaseDate: String,
   platforms: [String],
   gallery: [String],
-  mediaGallery: [{     role: { type: String, enum: [\"user\", \"bot\", \"assistant\"] }, required: true },   url: { type: String, required: true },
+  mediaGallery: [{ url: { type: String, required: true },
     caption: String
   }],
   downloadLink: String,
