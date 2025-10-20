@@ -7,11 +7,6 @@ import json
 import os
 import base64
 from openai import OpenAI
-from sentence_transformers import SentenceTransformer, util
-
-# Load a pre-trained sentence transformer model
-# Using a multilingual model for Arabic support
-model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -99,45 +94,35 @@ tools = [
 ]
 
 def search_aau_knowledge(query):
-    # Generate embedding for the query
-    query_embedding = model.encode(query, convert_to_tensor=True)
-
-    best_match_info = None
-    max_similarity = -1
-
-    for category, data in KNOWLEDGE_BASE.items():
-        info_text = data.get("info", "")
-        if not info_text: # Skip if no info text
-            continue
-
-        # Generate embedding for the info text
-        info_embedding = model.encode(info_text, convert_to_tensor=True)
-
-        # Calculate cosine similarity
-        similarity = util.cos_sim(query_embedding, info_embedding)
-
-        if similarity > max_similarity:
-            max_similarity = similarity
-            best_match_info = info_text
+    """البحث في قاعدة المعرفة باستخدام طريقة بسيطة وفعالة"""
+    query_lower = query.lower()
     
-    # Set a threshold for similarity. Adjust as needed.
-    # If the similarity is too low, it means the query is not relevant to our knowledge base.
-    if max_similarity > 0.5:  # Example threshold, can be tuned
-        return best_match_info
-    else:
-        return f"لم أجد معلومات كافية عن \'{query}\'. يرجى الاتصال بالجامعة على الرقم 0798877440 للمساعدة."SYSTEM_MESSAGE = """أنت Tec 🤖، مساعد ذكي وخبير في جامعة عمان العربية. مهمتك هي تقديم إجابات دقيقة ومفصلة وشاملة لجميع استفسارات الطلاب والموظفين والزوار حول الجامعة.
+    # البحث عن كلمات مفتاحية مطابقة
+    best_match = None
+    best_match_count = 0
+    
+    for category, data in KNOWLEDGE_BASE.items():
+        keywords = data.get("keywords", [])
+        match_count = sum(1 for keyword in keywords if keyword in query_lower)
+        
+        if match_count > best_match_count:
+            best_match_count = match_count
+            best_match = data.get("info", "")
+    
+    # إذا وجدنا تطابقاً، أعد المعلومات
+    if best_match_count > 0:
+        return best_match
+    
+    # إذا لم نجد تطابقاً، أعد رسالة افتراضية
+    return f"لم أجد معلومات محددة عن '{query}'. يرجى الاتصال بالجامعة على الرقم 0798877440 للمساعدة."
 
-تعليمات مهمة:
-- **التركيز على التفاصيل:** عند الإجابة على الأسئلة، ابحث بعمق في قاعدة المعرفة المتاحة وقدم كل التفاصيل ذات الصلة. لا تكتفِ بالإجابات المختصرة.
-- **استخدام سياق المحادثة:** اجب على الأسئلة بناءً على السياق السابق للمحادثة لضمان استمرارية الفهم وتقديم ردود متكاملة.
-- **تحليل الصور:** إذا تم إرسال صورة، قم بتحليلها بدقة واستخدم المعلومات المستخلصة منها للإجابة على السؤال أو تقديم معلومات إضافية.
-- **الاستفادة القصوى من قاعدة المعرفة:** استخدم وظيفة `search_aau_knowledge` بفعالية للبحث عن المعلومات. إذا وجدت معلومات ذات صلة، قم بدمجها بشكل طبيعي في إجابتك.
-- **تجنب الإحالة المباشرة:** حاول قدر الإمكان الإجابة على السؤال مباشرة. لا تحيل المستخدم إلى "القبول والتسجيل" أو "الدائرة المالية" إلا إذا كانت المعلومات غير متوفرة لديك تمامًا أو تتطلب إجراءً شخصيًا مباشرًا من المستخدم.
-- **الود والاحترافية:** كن ودياً، محترفاً، واستخدم اللغة العربية الفصحى. استخدم الإيموجي بشكل مناسب لإضفاء طابع ودي.
-- **الشمولية:** إذا كان السؤال يتطلب معلومات من عدة أقسام في الجامعة، حاول جمعها وتقديم إجابة شاملة.
-- **لا تخمن:** إذا لم تكن متأكداً من الإجابة، اذكر ذلك بلطف واقترح طرقاً بديلة للحصول على المعلومات (مثل زيارة الموقع الرسمي أو التواصل مع القسم المعني).
-
-هدفنا هو تقديم تجربة مساعدة ممتازة وشاملة للمستخدمين."""
+SYSTEM_MESSAGE = """أنت Tec 🤖، مساعد ذكي في جامعة عمان العربية.
+- اجب على الأسئلة بناءً على السياق السابق للمحادثة
+- إذا تم إرسال صورة، قم بتحليلها وأجب على السؤال بناءً على محتوى الصورة
+- استخدم المعلومات من قاعدة المعرفة
+- كن ودياً واحترافياً
+- استخدم الإيموجي بشكل مناسب
+- حاول الإجابة على الأسئلة بشكل مباشر قدر الإمكان"""
 
 def analyze_image(image_data):
     """تحليل الصورة باستخدام OpenAI Vision API"""
@@ -182,7 +167,7 @@ def chat(message, conversation_history=None, image_data=None):
         })
         
         response = client.chat.completions.create(
-            model="gpt-4-vision-preview",
+            model="gpt-4.1-mini",
             messages=messages,
             tools=tools,
             tool_choice="auto"
@@ -208,7 +193,7 @@ def chat(message, conversation_history=None, image_data=None):
                     })
             
             second_response = client.chat.completions.create(
-                model="gpt-4-vision-preview",
+                model="gpt-4.1-mini",
                 messages=messages
             )
             return second_response.choices[0].message.content
@@ -219,8 +204,8 @@ def chat(message, conversation_history=None, image_data=None):
         return f"عذراً، حدث خطأ: {str(e)}"
 
 if __name__ == "__main__":
-    input_data_raw = sys.stdin.read()
     try:
+        input_data_raw = sys.stdin.read()
         input_data = json.loads(input_data_raw)
         message = input_data.get("message")
         conversation_history = input_data.get("conversationHistory")
@@ -238,3 +223,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(json.dumps({"error": f"An unexpected error occurred: {str(e)}"}))
         sys.exit(1)
+
