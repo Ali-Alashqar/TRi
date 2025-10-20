@@ -169,9 +169,7 @@ const ProjectSchema = new Schema({
   releaseDate: String,
   platforms: [String],
   gallery: [String],
-  mediaGallery: [{ url: { type: String, required: true },
-    caption: String
-  }],
+  mediaGallery: [{ url: { type: String, required: true }, caption: String }],
   downloadLink: String,
   videoLink: String,
   // Rating system
@@ -520,7 +518,7 @@ const ChatbotConversationSchema = new Schema({
   responseTime: Number,
   modelUsed: { type: String, default: 'gpt-4.1-mini' },
   conversationContext: [{
-    role: { type: String, enum: [\'user\', \'bot\', \'assistant\'], required: true },
+    role: { type: String, enum: ['user', 'bot', 'assistant'], required: true },
     content: { type: String, required: true },
   }],
   metadata: {
