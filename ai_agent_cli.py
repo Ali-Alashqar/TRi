@@ -219,25 +219,22 @@ def chat(message, conversation_history=None, image_data=None):
         return f"عذراً، حدث خطأ: {str(e)}"
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(json.dumps({"error": "No message provided"}))
+    input_data_raw = sys.stdin.read()
+    try:
+        input_data = json.loads(input_data_raw)
+        message = input_data.get("message")
+        conversation_history = input_data.get("conversationHistory")
+        image_data = input_data.get("imageUrl")
+
+        if not message:
+            print(json.dumps({"error": "No message provided"}))
+            sys.exit(1)
+        
+        response = chat(message, conversation_history, image_data)
+        print(json.dumps({"response": response}, ensure_ascii=False))
+    except json.JSONDecodeError:
+        print(json.dumps({"error": "Invalid JSON input"}))
         sys.exit(1)
-    
-    message = sys.argv[1]
-    conversation_history = None
-    image_data = None
-    
-    if len(sys.argv) > 2:
-        try:
-            conversation_history = json.loads(sys.argv[2])
-        except:
-            conversation_history = None
-    
-    if len(sys.argv) > 3:
-        try:
-            image_data = sys.argv[3]
-        except:
-            image_data = None
-    
-    response = chat(message, conversation_history, image_data)
-    print(json.dumps({"response": response}, ensure_ascii=False))
+    except Exception as e:
+        print(json.dumps({"error": f"An unexpected error occurred: {str(e)}"}))
+        sys.exit(1)

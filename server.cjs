@@ -1196,15 +1196,16 @@ app.post('/api/chatbot/message', async (req, res) => {
     }
 
     // Use AI Agent with conversation history and image data
-    const pythonArgs = [path.join(__dirname, 'ai_agent_cli.py'), message];
-    if (historyJson) {
-      pythonArgs.push(historyJson);
-    }
-    if (imageUrl) {
-      pythonArgs.push(imageUrl);
-    }
+    const python = spawn('python3.11', [path.join(__dirname, 'ai_agent_cli.py')]);
     
-    const python = spawn('python3.11', pythonArgs);
+    const inputData = {
+      message: message,
+      conversationHistory: conversationHistory || [],
+      imageUrl: imageUrl || null
+    };
+    
+    python.stdin.write(JSON.stringify(inputData));
+    python.stdin.end();
 
     let dataString = '';
     let errorString = '';
