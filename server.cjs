@@ -1236,6 +1236,7 @@ app.post('/api/chatbot/message', async (req, res) => {
 
       // Save conversation to database
       try {
+        console.log('Attempting to save conversation...');
         const conversation = new ChatbotConversation({
           userMessage: message,
           botResponse: botResponse,
@@ -1253,8 +1254,10 @@ app.post('/api/chatbot/message', async (req, res) => {
           }
         });
         await conversation.save();
+        console.log('Conversation saved successfully!');
       } catch (dbError) {
         console.error('Error saving conversation:', dbError);
+        console.error('Conversation object that failed to save:', JSON.stringify(conversation, null, 2));
       }
 
       res.json({ response: botResponse, sessionId: sessionId, conversationHistory: conversationHistory || [] });

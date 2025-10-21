@@ -201,11 +201,13 @@ def chat(message, conversation_history=None, image_data=None):
             return response_message.content
     
     except Exception as e:
-        return f"عذراً، حدث خطأ: {str(e)}"
+        print(f"AI Agent chat function error: {str(e)}", file=sys.stderr)
+        return f"عذراً، حدث خطأ داخلي: {str(e)}"
 
 if __name__ == "__main__":
     try:
         input_data_raw = sys.stdin.read()
+        sys.stderr.write(f"Received input: {input_data_raw}\n") # Log received input
         input_data = json.loads(input_data_raw)
         message = input_data.get("message")
         conversation_history = input_data.get("conversationHistory")
@@ -216,11 +218,14 @@ if __name__ == "__main__":
             sys.exit(1)
         
         response = chat(message, conversation_history, image_data)
+        sys.stderr.write(f"AI Agent response: {response}\n") # Log AI Agent response
         print(json.dumps({"response": response}, ensure_ascii=False))
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        sys.stderr.write(f"JSON Decode Error: {e}\nInput was: {input_data_raw}\n") # Log JSON error
         print(json.dumps({"error": "Invalid JSON input"}))
         sys.exit(1)
     except Exception as e:
+        sys.stderr.write(f"Unexpected error in main: {e}\n") # Log unexpected error
         print(json.dumps({"error": f"An unexpected error occurred: {str(e)}"}))
         sys.exit(1)
 
