@@ -1367,15 +1367,12 @@ app.get('/api/chatbot/conversations', async (req, res) => {
   try {
     const { page = 1, limit = 20, sortBy = 'date', order = -1 } = req.query;
     const skip = (page - 1) * limit;
-    console.log(`Fetching conversations: page=${page}, limit=${limit}, sortBy=${sortBy}, order=${order}`);
-
     const conversations = await ChatbotConversation.find()
       .sort({ [sortBy]: order })
       .skip(skip)
       .limit(parseInt(limit));
 
     const total = await ChatbotConversation.countDocuments();
-    console.log(`Found ${total} total conversations, returning ${conversations.length} for page ${page}`);
 
     res.json({
       conversations,

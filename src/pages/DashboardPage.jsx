@@ -3206,7 +3206,6 @@ function ChatbotConversationsContent({ apiUrl, toast }) {
       setLoading(true);
       const response = await fetch(`${apiUrl}/api/chatbot/conversations?page=${page}&limit=20`);
       const data = await response.json();
-      console.log("Fetched conversations data:", data);
       setConversations(data.conversations);
       setTotalPages(data.pagination.pages);
     } catch (error) {
