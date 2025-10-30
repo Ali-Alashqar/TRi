@@ -1384,7 +1384,7 @@ app.get('/api/chatbot/conversations', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching conversations:', error);
+    console.error('CRITICAL MONGODB ERROR fetching conversations:', error);
     res.status(500).json({ error: 'Failed to fetch conversations' });
   }
 });
