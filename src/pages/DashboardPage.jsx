@@ -3205,31 +3205,14 @@ function ChatbotConversationsContent({ apiUrl, toast }) {
     try {
       setLoading(true);
       const response = await fetch(`${apiUrl}/api/chatbot/conversations?page=${page}&limit=20`);
-      
-      // CRITICAL DEBUGGING: Log status and check for non-OK response
-      console.log('API Response Status:', response.status);
-      if (!response.ok) {
-        // Attempt to read response body for more details, but handle case where it's not JSON
-        const errorText = await response.text();
-        console.error('Non-OK HTTP Status:', response.status, 'Body:', errorText);
-        throw new Error(`Failed to fetch conversations: HTTP Status ${response.status}. Details: ${errorText.substring(0, 100)}...`);
-      }
-
       const data = await response.json();
-      console.log('Received Conversation Data:', data);
-      
-      // Ensure the expected structure exists before setting state
-      if (!data || !data.conversations || !data.pagination || typeof data.pagination.pages === 'undefined') {
-        throw new Error('API response is missing required data structure (conversations or pagination).');
-      }
-
       setConversations(data.conversations);
       setTotalPages(data.pagination.pages);
     } catch (error) {
-      console.error('Error fetching conversations:', error.message);
+      console.error('Error fetching conversations:', error);
       toast({
-        title: 'Error Fetching Conversations',
-        description: error.message,
+        title: 'Error',
+        description: 'Failed to fetch conversations',
         variant: 'destructive'
       });
     } finally {
