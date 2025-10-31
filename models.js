@@ -660,7 +660,6 @@ const User = model('User', UserSchema);
 const Visitor = model('Visitor', VisitorSchema);
 const Testimonial = model('Testimonial', TestimonialSchema);
 const ChatbotConversation = model('ChatbotConversation', ChatbotConversationSchema);
-
 export {
   LiveNotification,
   SiteData,
