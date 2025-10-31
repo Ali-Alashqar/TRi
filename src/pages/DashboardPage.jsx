@@ -111,10 +111,6 @@ export default function DashboardPage({ siteData, apiUrl }) {
             <MessageSquare size={20} />
             <span>Chatbot Conversations</span>
           </Link>
-          <Link to="/dashboard/user-management" className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-muted transition-colors">
-            <Users size={20} />
-            <span>User Management</span>
-          </Link>
           <Link to="/dashboard/settings" className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-muted transition-colors">
             <Settings size={20} />
             <span>Settings</span>
@@ -146,7 +142,6 @@ export default function DashboardPage({ siteData, apiUrl }) {
           <Route path="/visitors" element={<VisitorsContent apiUrl={apiUrl} toast={toast} />} />
           <Route path="/contact-settings" element={<ContactSettingsContent siteData={siteData} apiUrl={apiUrl} toast={toast} />} />
           <Route path="/chatbot-conversations" element={<ChatbotConversationsContent apiUrl={apiUrl} toast={toast} />} />
-          <Route path="/user-management" element={<UserManagementContent apiUrl={apiUrl} toast={toast} />} />
           <Route path="/settings" element={<SettingsContent siteData={siteData} apiUrl={apiUrl} toast={toast} />} />
         </Routes>
       </div>
@@ -156,22 +151,12 @@ export default function DashboardPage({ siteData, apiUrl }) {
 
 // Home Content Management
 function HomeContent({ siteData, apiUrl, toast }) {
-  const [heroData, setHeroData] = useState(siteData?.home?.hero || {});
-  const [whatWeDo, setWhatWeDo] = useState(siteData?.home?.whatWeDo || []);
-  const [vision, setVision] = useState(siteData?.home?.vision || {});
-  const [partners, setPartners] = useState(siteData?.home?.partners || []);
+  const [heroData, setHeroData] = useState(siteData.home.hero);
+  const [whatWeDo, setWhatWeDo] = useState(siteData.home.whatWeDo);
+  const [vision, setVision] = useState(siteData.home.vision);
+  const [partners, setPartners] = useState(siteData.home.partners);
   const [editingService, setEditingService] = useState(null);
   const [editingPartner, setEditingPartner] = useState(null);
-
-  // Update state when siteData changes
-  useEffect(() => {
-    if (siteData?.home) {
-      setHeroData(siteData.home.hero || {});
-      setWhatWeDo(siteData.home.whatWeDo || []);
-      setVision(siteData.home.vision || {});
-      setPartners(siteData.home.partners || []);
-    }
-  }, [siteData]);
 
   const saveHero = async () => {
     try {
@@ -3220,14 +3205,31 @@ function ChatbotConversationsContent({ apiUrl, toast }) {
     try {
       setLoading(true);
       const response = await fetch(`${apiUrl}/api/chatbot/conversations?page=${page}&limit=20`);
+      
+      // CRITICAL DEBUGGING: Log status and check for non-OK response
+      console.log('API Response Status:', response.status);
+      if (!response.ok) {
+        // Attempt to read response body for more details, but handle case where it's not JSON
+        const errorText = await response.text();
+        console.error('Non-OK HTTP Status:', response.status, 'Body:', errorText);
+        throw new Error(`Failed to fetch conversations: HTTP Status ${response.status}. Details: ${errorText.substring(0, 100)}...`);
+      }
+
       const data = await response.json();
+      console.log('Received Conversation Data:', data);
+      
+      // Ensure the expected structure exists before setting state
+      if (!data || !data.conversations || !data.pagination || typeof data.pagination.pages === 'undefined') {
+        throw new Error('API response is missing required data structure (conversations or pagination).');
+      }
+
       setConversations(data.conversations);
       setTotalPages(data.pagination.pages);
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      console.error('Error fetching conversations:', error.message);
       toast({
-        title: 'Error',
-        description: 'Failed to fetch conversations',
+        title: 'Error Fetching Conversations',
+        description: error.message,
         variant: 'destructive'
       });
     } finally {
@@ -3484,301 +3486,6 @@ function ChatbotConversationsContent({ apiUrl, toast }) {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-
-
-// User Management Component
-function UserManagementContent({ apiUrl, toast }) {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    email: '',
-    role: 'editor',
-    permissions: {}
-  });
-
-  const defaultPermissions = {
-    dashboard: false,
-    home_content: false,
-    about_content: false,
-    projects: false,
-    blog: false,
-    technologies: false,
-    user_management: false,
-    chatbot_conversations: false,
-    chatbot_settings: false,
-    statistics: false,
-    visitors: false,
-    ratings: false,
-    testimonials: false,
-    testimonial_submissions: false,
-    messages: false,
-    project_submissions: false,
-    contact_settings: false,
-    general_settings: false
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${apiUrl}/api/users`);
-      const data = await response.json();
-      setUsers(data);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch users',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddUser = async () => {
-    if (!formData.username || !formData.password || !formData.email) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch(`${apiUrl}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          permissions: formData.permissions || defaultPermissions
-        })
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'User created successfully'
-        });
-        setShowAddModal(false);
-        setFormData({
-          username: '',
-          password: '',
-          email: '',
-          role: 'editor',
-          permissions: {}
-        });
-        fetchUsers();
-      } else {
-        const error = await response.json();
-        toast({
-          title: 'Error',
-          description: error.error || 'Failed to create user',
-          variant: 'destructive'
-        });
-      }
-    } catch (error) {
-      console.error('Error creating user:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create user',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleToggleStatus = async (userId, currentStatus) => {
-    try {
-      const response = await fetch(`${apiUrl}/api/users/${userId}/toggle-status`, {
-        method: 'PUT'
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: `User ${currentStatus ? 'deactivated' : 'activated'} successfully`
-        });
-        fetchUsers();
-      }
-    } catch (error) {
-      console.error('Error toggling user status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to toggle user status',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-
-    try {
-      const response = await fetch(`${apiUrl}/api/users/${userId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'User deleted successfully'
-        });
-        fetchUsers();
-      }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete user',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground mt-2">Manage admin users and their permissions</p>
-        </div>
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </div>
-
-      {/* Users Table */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-muted-foreground">Loading users...</div>
-        ) : users.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No users found</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-border bg-muted/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Username</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Email</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Role</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Last Login</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user._id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-3 text-sm font-medium">{user.username}</td>
-                    <td className="px-6 py-3 text-sm">{user.email}</td>
-                    <td className="px-6 py-3 text-sm">
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3 text-sm">
-                      {user.isActive ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-600">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-600">
-                          Inactive
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-3 text-sm">
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('ar-JO') : 'Never'}
-                    </td>
-                    <td className="px-6 py-3 text-sm space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleToggleStatus(user._id, user.isActive)}
-                      >
-                        {user.isActive ? 'Deactivate' : 'Activate'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteUser(user._id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Add User Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Username</label>
-              <Input
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="Enter username"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter email"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <Input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Enter password"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Role</label>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-              >
-                <option value="editor">Editor</option>
-                <option value="limited_admin">Limited Admin</option>
-                <option value="viewer">Viewer</option>
-              </select>
-            </div>
-            <Button onClick={handleAddUser} className="w-full">
-              <Plus className="mr-2 h-4 w-4" />
-              Create User
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
