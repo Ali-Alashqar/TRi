@@ -215,11 +215,38 @@ const ProjectSubmissionSchema = new Schema({
   date: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-// User Schema
+// User Schema - With Role-Based Access Control (RBAC)
 const UserSchema = new Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, default: 'Admin' }
+  email: { type: String, required: true, unique: true },
+  role: { 
+    type: String, 
+    enum: ['super_admin', 'limited_admin', 'editor', 'viewer'], 
+    default: 'viewer' 
+  },
+  isActive: { type: Boolean, default: true },
+  lastLogin: { type: Date, default: null },
+  permissions: {
+    dashboard: { type: Boolean, default: false },
+    home_content: { type: Boolean, default: false },
+    about_content: { type: Boolean, default: false },
+    projects: { type: Boolean, default: false },
+    blog: { type: Boolean, default: false },
+    technologies: { type: Boolean, default: false },
+    user_management: { type: Boolean, default: false },
+    chatbot_conversations: { type: Boolean, default: false },
+    chatbot_settings: { type: Boolean, default: false },
+    statistics: { type: Boolean, default: false },
+    visitors: { type: Boolean, default: false },
+    ratings: { type: Boolean, default: false },
+    testimonials: { type: Boolean, default: false },
+    testimonial_submissions: { type: Boolean, default: false },
+    messages: { type: Boolean, default: false },
+    project_submissions: { type: Boolean, default: false },
+    contact_settings: { type: Boolean, default: false },
+    general_settings: { type: Boolean, default: false }
+  }
 }, { timestamps: true });
 
 // Visitor Schema - Track all visitor information
