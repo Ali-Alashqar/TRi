@@ -240,86 +240,6 @@ if (fs.existsSync(distPath)) {
 // =================================================================
 
 // User Login/Auth
-// Initialize RBAC system with default Super Admin and Limited Admin accounts
-async function initializeRBAC() {
-  try {
-    const userCount = await User.countDocuments();
-    
-    if (userCount === 0) {
-      console.log('🔐 Initializing RBAC system with default admin accounts...');
-      
-      const superAdmin = new User({
-        username: 'superadmin_ylz8ww69',
-        password: 'cQCGigquHrR55B$KaB',
-        email: 'superadmin@technest.dev',
-        role: 'super_admin',
-        isActive: true,
-        permissions: {
-          dashboard: true,
-          home_content: true,
-          about_content: true,
-          projects: true,
-          blog: true,
-          technologies: true,
-          user_management: true,
-          chatbot_conversations: true,
-          chatbot_settings: true,
-          statistics: true,
-          visitors: true,
-          ratings: true,
-          testimonials: true,
-          testimonial_submissions: true,
-          messages: true,
-          project_submissions: true,
-          contact_settings: true,
-          general_settings: true
-        }
-      });
-      
-      const limitedAdmin = new User({
-        username: 'limitedadmin_tq0g715x',
-        password: 'k$i4i$S2$fL1QBj$#q',
-        email: 'limitedadmin@technest.dev',
-        role: 'limited_admin',
-        isActive: true,
-        permissions: {
-          dashboard: true,
-          home_content: true,
-          about_content: true,
-          projects: true,
-          blog: true,
-          technologies: true,
-          user_management: false,
-          chatbot_conversations: false,
-          chatbot_settings: false,
-          statistics: false,
-          visitors: false,
-          ratings: false,
-          testimonials: false,
-          testimonial_submissions: false,
-          messages: true,
-          project_submissions: true,
-          contact_settings: false,
-          general_settings: false
-        }
-      });
-      
-      await superAdmin.save();
-      await limitedAdmin.save();
-      
-      console.log('✅ RBAC system initialized successfully');
-      console.log('📋 Super Admin: superadmin_ylz8ww69');
-      console.log('📋 Limited Admin: limitedadmin_tq0g715x');
-    }
-  } catch (error) {
-    console.error('❌ Error initializing RBAC:', error);
-  }
-}
-
-mongoose.connection.once('open', () => {
-  initializeRBAC();
-});
-
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -329,25 +249,16 @@ app.post('/api/login', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (!user.isActive) {
-      return res.status(403).json({ error: 'User account is disabled' });
-    }
-
-    if (user.password !== password) {
+    if (user.password !== password) { // In a real app, use bcrypt for hashing
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    user.lastLogin = new Date();
-    await user.save();
 
     res.json({
       message: 'Login successful',
       user: {
         id: user._id,
         username: user.username,
-        email: user.email,
-        role: user.role,
-        permissions: user.permissions
+        role: user.role || 'admin' // Default role
       }
     });
 
@@ -1069,173 +980,6 @@ app.get('/api/chatbot/conversations/export/json', async (req, res) => {
   } catch (error) {
     console.error('Error exporting conversations:', error);
     res.status(500).json({ error: 'Failed to export conversations' });
-  }
-});
-
-// =================================================================
-// USER MANAGEMENT API (RBAC)
-// =================================================================
-
-// Get all users (Super Admin only)
-app.get('/api/users', async (req, res) => {
-  try {
-    const users = await User.find().select('-password');
-    res.json(users);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-});
-
-// Create new user (Super Admin only)
-app.post('/api/users', async (req, res) => {
-  try {
-    const { username, password, email, role, permissions } = req.body;
-    
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Username already exists' });
-    }
-    
-    const newUser = new User({
-      username,
-      password,
-      email,
-      role: role || 'editor',
-      isActive: true,
-      permissions: permissions || {
-        dashboard: false,
-        home_content: false,
-        about_content: false,
-        projects: false,
-        blog: false,
-        technologies: false,
-        user_management: false,
-        chatbot_conversations: false,
-        chatbot_settings: false,
-        statistics: false,
-        visitors: false,
-        ratings: false,
-        testimonials: false,
-        testimonial_submissions: false,
-        messages: false,
-        project_submissions: false,
-        contact_settings: false,
-        general_settings: false
-      }
-    });
-    
-    await newUser.save();
-    res.status(201).json({
-      message: 'User created successfully',
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role
-      }
-    });
-  } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Failed to create user' });
-  }
-});
-
-// Update user (Super Admin only)
-app.put('/api/users/:id', async (req, res) => {
-  try {
-    const { username, email, role, permissions, isActive } = req.body;
-    
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        username,
-        email,
-        role,
-        permissions,
-        isActive
-      },
-      { new: true }
-    ).select('-password');
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json({
-      message: 'User updated successfully',
-      user
-    });
-  } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({ error: 'Failed to update user' });
-  }
-});
-
-// Delete user (Super Admin only)
-app.delete('/api/users/:id', async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json({ message: 'User deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Failed to delete user' });
-  }
-});
-
-// Toggle user status (Super Admin only)
-app.put('/api/users/:id/toggle-status', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    user.isActive = !user.isActive;
-    await user.save();
-    
-    res.json({
-      message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
-      user: {
-        id: user._id,
-        username: user.username,
-        isActive: user.isActive
-      }
-    });
-  } catch (error) {
-    console.error('Error toggling user status:', error);
-    res.status(500).json({ error: 'Failed to toggle user status' });
-  }
-});
-
-// Update user permissions (Super Admin only)
-app.put('/api/users/:id/permissions', async (req, res) => {
-  try {
-    const { permissions } = req.body;
-    
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { permissions },
-      { new: true }
-    ).select('-password');
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json({
-      message: 'Permissions updated successfully',
-      user
-    });
-  } catch (error) {
-    console.error('Error updating permissions:', error);
-    res.status(500).json({ error: 'Failed to update permissions' });
   }
 });
 
