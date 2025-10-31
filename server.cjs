@@ -1252,7 +1252,6 @@ app.get('*', (req, res) => {
   if (req.originalUrl.startsWith('/api/')) {
     return res.status(404).json({ error: 'API Endpoint Not Found' });
   }
-
   const indexPath = fs.existsSync(path.join(distPath, 'index.html'))
     ? path.join(distPath, 'index.html')
     : path.join(__dirname, 'index.html');
