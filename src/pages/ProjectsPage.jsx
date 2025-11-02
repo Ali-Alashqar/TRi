@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
-import { ExternalLink, Play, Download, Video, Star, Share2, Search, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ExternalLink, Play, Download, Video, Star, Share2, Search, Filter, ChevronLeft, ChevronRight, X, Eye } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import SEO from '../components/SEO';
 
@@ -184,7 +184,7 @@ export default function ProjectsPage({ projects }) {
           ))}
         </div>
 
-        {/* Projects Grid */}
+        {/* Projects Grid - Enhanced Design */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProjects.map((project, index) => (
             <motion.div
@@ -192,32 +192,52 @@ export default function ProjectsPage({ projects }) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary transition-all duration-300 cursor-pointer group"
+              className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-2xl hover:shadow-primary/20"
               onClick={() => setSelectedProject(project)}
             >
-              <div className="relative aspect-video overflow-hidden">
+              {/* Image Container with Enhanced Effects */}
+              <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20">
                 <img
                   src={project.thumbnailUrl}
                   alt={project.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-500 ease-out"
                 />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Play className="h-12 w-12 text-primary" />
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex flex-col items-center gap-3"
+                  >
+                    <div className="bg-primary/90 backdrop-blur-sm p-3 rounded-full">
+                      <Play className="h-8 w-8 text-white fill-white" />
+                    </div>
+                    <span className="text-white text-sm font-semibold">View Details</span>
+                  </motion.div>
                 </div>
-                {/* Rating Badge - Real Rating */}
-                <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                  <span className="text-xs font-semibold">
+                
+                {/* Rating Badge - Enhanced */}
+                <div className="absolute top-4 left-4 bg-gradient-to-r from-primary to-secondary backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                  <Star className="h-3.5 w-3.5 fill-yellow-300 text-yellow-300" />
+                  <span className="text-xs font-bold text-white">
                     {project.ratings?.average ? project.ratings.average.toFixed(1) : '0.0'}
                   </span>
-                  <span className="text-xs text-muted-foreground">({project.ratings?.count || 0})</span>
+                  <span className="text-xs text-white/80">({project.ratings?.count || 0})</span>
                 </div>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <Badge variant="outline" className="border-primary text-primary">
+                
+                {/* Type Badge - Enhanced */}
+                <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
+                  <Badge variant="outline" className="border-primary text-primary text-xs font-semibold">
                     {project.type}
                   </Badge>
+                </div>
+              </div>
+              
+              {/* Content Container */}
+              <div className="p-6 space-y-4">
+                {/* Title and Share */}
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-lg font-bold line-clamp-2 group-hover:text-primary transition-colors">{project.title}</h3>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -225,19 +245,36 @@ export default function ProjectsPage({ projects }) {
                       e.stopPropagation();
                       handleShare(project);
                     }}
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 flex-shrink-0 hover:bg-primary/10"
                   >
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
-                <p className="text-muted-foreground text-sm mb-4">{project.description}</p>
+                
+                {/* Description */}
+                <p className="text-muted-foreground text-sm line-clamp-2 group-hover:text-foreground transition-colors">{project.description}</p>
+                
+                {/* Tags */}
                 <div className="flex flex-wrap gap-2">
-                  {project.tags.map(tag => (
-                    <span key={tag} className="text-xs px-2 py-1 bg-muted rounded">
+                  {project.tags.slice(0, 3).map(tag => (
+                    <span key={tag} className="text-xs px-2.5 py-1 bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-full text-primary font-medium">
                       {tag}
                     </span>
                   ))}
+                  {project.tags.length > 3 && (
+                    <span className="text-xs px-2.5 py-1 bg-muted rounded-full text-muted-foreground font-medium">+{project.tags.length - 3}</span>
+                  )}
+                </div>
+                
+                {/* Footer with CTA */}
+                <div className="pt-2 border-t border-border/50">
+                  <Button 
+                    onClick={() => setSelectedProject(project)}
+                    className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-white font-semibold"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Project
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -412,15 +449,34 @@ export default function ProjectsPage({ projects }) {
                     </div>
                   </div>
                   {(selectedProject.downloadLink || selectedProject.videoLink) && (
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 pt-4 border-t border-border">
                       {selectedProject.downloadLink && (
-                        <Button className="flex-1">
+                        <Button 
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = selectedProject.downloadLink;
+                            link.download = selectedProject.title + '-download';
+                            if (selectedProject.downloadLink.startsWith('http')) {
+                              window.open(selectedProject.downloadLink, '_blank');
+                            } else {
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }
+                            toast({ title: 'Download Started', description: 'Your file download has started' });
+                          }}
+                          className="flex-1 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-semibold"
+                        >
                           <Download className="mr-2 h-4 w-4" />
-                          Download
+                          Download Now
                         </Button>
                       )}
                       {selectedProject.videoLink && (
-                        <Button variant="outline" className="flex-1">
+                        <Button 
+                          onClick={() => window.open(selectedProject.videoLink, '_blank')}
+                          variant="outline" 
+                          className="flex-1 border-primary text-primary hover:bg-primary/10 font-semibold"
+                        >
                           <Video className="mr-2 h-4 w-4" />
                           Watch Trailer
                         </Button>

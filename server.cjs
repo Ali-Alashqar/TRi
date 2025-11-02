@@ -4,12 +4,28 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-
 const fs = require('fs');
+
+// Configure Multer storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, 'public', 'uploads');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = path.basename(file.originalname, ext);
+    cb(null, `${name}-${Date.now()}${ext}`);
+  }
+});
+
+const upload = multer({ storage: storage });
+
 const mongoose = require('mongoose');
 const { SiteData, Project, Message, Application, ProjectSubmission, User, Visitor, Rating, TestimonialSubmission, LiveNotification, ChatbotConversation } = require('./models.js');
-
-
 
 
 const app = express();
@@ -207,30 +223,49 @@ async function initializeData() {
             title: 'Behind the Scenes: Neon Odyssey Development',
             excerpt: 'A deep dive into the development process of our upcoming cyberpunk adventure game.',
             content: 'Creating Neon Odyssey has been an incredible journey for our team. In this behind-the-scenes look, we share insights into our development process...\n\nFrom concept art to final implementation, every aspect of Neon Odyssey has been carefully crafted to deliver an unforgettable cyberpunk experience. Our art team spent months developing the unique neon-lit aesthetic that defines the game\'s visual identity.\n\nThe technical challenges were significant, but our engineering team rose to the occasion, implementing advanced rendering techniques and optimization strategies to ensure smooth performance across all platforms.',
-            image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=400&fit=crop',
+            image: 'https://images.unsplash.com/photo-1593305841355-355e68983a0b?w=800&h=400&fit=crop',
             author: 'Sarah Martinez',
-            date: '2025-01-10',
+            date: '2025-02-20',
             category: 'Development',
-            tags: ['Game Dev', 'Neon Odyssey', 'Behind the Scenes']
-          },
-          {
-            id: '3',
-            title: 'Art Direction in Modern Games',
-            excerpt: 'How visual storytelling and art direction create memorable gaming experiences.',
-            content: 'Art direction is more than just making a game look good – it\'s about creating a cohesive visual language that enhances the player\'s experience...\n\nIn modern game development, art direction plays a crucial role in establishing the game\'s identity and emotional tone. Every color choice, lighting decision, and environmental detail contributes to the overall narrative.\n\nOur approach at TechNest combines traditional art principles with cutting-edge technology to create visually stunning and emotionally resonant gaming experiences.',
-            image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&h=400&fit=crop',
-            author: 'James Wilson',
-            date: '2025-01-05',
-            category: 'Art & Design',
-            tags: ['Art Direction', 'Game Design', 'Visual Storytelling']
+            tags: ['Cyberpunk', 'Development', '3D']
           }
         ],
         seo: {
-          home: { title: 'TechNest - Game Development Studio', description: 'Professional game development team', ogImage: '' },
-          projects: { title: 'Our Projects - TechNest', description: 'Explore our game portfolio', ogImage: '' },
-          about: { title: 'About Us - TechNest', description: 'Meet the team behind TechNest', ogImage: '' },
-          contact: { title: 'Contact Us - TechNest', description: 'Get in touch with TechNest', ogImage: '' },
-          join: { title: 'Join Us - TechNest', description: 'Career opportunities at TechNest', ogImage: '' }
+          home: {
+            title: 'TechNest - Crafting Immersive Gaming Experiences',
+            description: 'A leading game development studio focused on creating innovative and engaging gaming experiences across all platforms.',
+            keywords: 'game development, indie games, VR, mobile games, TechNest'
+          },
+          projects: {
+            title: 'Our Projects - TechNest Portfolio',
+            description: 'Explore our portfolio of completed and in-development projects, showcasing our expertise in 2D, 3D, VR, and mobile gaming.',
+            keywords: 'game projects, TechNest portfolio, indie games, VR games, mobile games'
+          },
+          about: {
+            title: 'About TechNest - Our Story and Team',
+            description: 'Learn about TechNest, our vision, our story, and meet the talented team behind our innovative games.',
+            keywords: 'TechNest team, game studio history, company vision, game developers'
+          },
+          join: {
+            title: 'Join the Nest - Careers at TechNest',
+            description: 'Explore career opportunities at TechNest and join our passionate team of game developers and artists.',
+            keywords: 'game development jobs, careers, job openings, TechNest hiring'
+          },
+          contact: {
+            title: 'Contact TechNest - Get in Touch',
+            description: 'Contact TechNest for inquiries, partnerships, or support. We are always happy to hear from you.',
+            keywords: 'contact game studio, TechNest email, support, partnership'
+          },
+          blog: {
+            title: 'TechNest Blog - News and Insights',
+            description: 'Read the latest news, development insights, and articles from the TechNest team.',
+            keywords: 'game development blog, TechNest news, gaming industry insights'
+          }
+        },
+        chatbot: {
+          enabled: true,
+          name: 'Tec',
+          welcomeMessage: 'مرحباً! أنا Tec 🤖، مساعدك الذكي في جامعة عمان العربية. كيف يمكنني مساعدتك اليوم؟'
         }
       });
       
@@ -239,94 +274,113 @@ async function initializeData() {
       // Create default projects
       const defaultProjects = [
         {
+          id: '1',
           title: 'Neon Odyssey',
           type: '3D',
-          tags: ['Action', 'Adventure', 'Sci-Fi'],
-          description: 'A futuristic action-adventure set in a neon-lit cyberpunk world',
-          thumbnailUrl: 'https://via.placeholder.com/400x300/00E5FF/FFFFFF?text=Neon+Odyssey',
-          coverUrl: 'https://via.placeholder.com/1200x600/00E5FF/FFFFFF?text=Neon+Odyssey',
-          features: ['Open World', 'Dynamic Combat', 'Story-Driven'],
-          technologies: ['Unreal Engine 5', 'C++', 'Blueprint'],
-          releaseDate: '2025-12-01',
-          platforms: ['Steam', 'Epic Games'],
-          gallery: []
+          tags: ['Cyberpunk', 'Action', 'RPG'],
+          description: 'A sprawling open-world cyberpunk RPG set in a neon-drenched metropolis.',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1593305841355-355e68983a0b?w=400&h=225&fit=crop',
+          coverUrl: 'https://images.unsplash.com/photo-1593305841355-355e68983a0b?w=800&h=450&fit=crop',
+          features: ['Open World', 'Deep Customization', 'Branching Storylines'],
+          technologies: ['Unreal Engine 5', 'C++', 'Blender'],
+          releaseDate: '2025-10-27',
+          platforms: ['PC', 'PlayStation 5', 'Xbox Series X'],
+          gallery: [],
+          mediaGallery: [
+            { type: 'image', url: 'https://images.unsplash.com/photo-1593305841355-355e68983a0b?w=800&h=450&fit=crop', caption: 'The neon-drenched city skyline' },
+            { type: 'video', url: 'https://www.youtube.com/embed/dQw4w9WgXcQ', caption: 'Official Gameplay Trailer' },
+            { type: 'image', url: 'https://images.unsplash.com/photo-1593305841355-355e68983a0b?w=400&h=225&fit=crop', caption: 'Character concept art' }
+          ],
+          downloadLink: '',
+          videoLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          ratings: { total: 45, count: 10, average: 4.5, breakdown: { 1: 0, 2: 0, 3: 1, 4: 3, 5: 6 } }
         },
         {
-          title: 'Pixel Quest',
+          id: '2',
+          title: 'Aether Drift',
+          type: 'VR',
+          tags: ['Space', 'Exploration', 'Simulation'],
+          description: 'A breathtaking VR space exploration and trading simulation game.',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1534796504249-158223155702?w=400&h=225&fit=crop',
+          coverUrl: 'https://images.unsplash.com/photo-1534796504249-158223155702?w=800&h=450&fit=crop',
+          features: ['Full VR Support', 'Procedural Galaxy', 'Multiplayer Trading'],
+          technologies: ['Unity', 'C#', 'Oculus SDK'],
+          releaseDate: '2024-08-15',
+          platforms: ['Oculus Quest', 'SteamVR'],
+          gallery: [],
+          mediaGallery: [
+            { type: 'image', url: 'https://images.unsplash.com/photo-1534796504249-158223155702?w=800&h=450&fit=crop', caption: 'A distant nebula' },
+            { type: 'image', url: 'https://images.unsplash.com/photo-1534796504249-158223155702?w=400&h=225&fit=crop', caption: 'Cockpit view' }
+          ],
+          downloadLink: '',
+          videoLink: '',
+          ratings: { total: 38, count: 8, average: 4.75, breakdown: { 1: 0, 2: 0, 3: 0, 4: 2, 5: 6 } }
+        },
+        {
+          id: '3',
+          title: 'Pixel Raiders',
           type: '2D',
-          tags: ['Platformer', 'Retro', 'Indie'],
-          description: 'A charming pixel-art platformer with challenging levels',
-          thumbnailUrl: 'https://via.placeholder.com/400x300/7C3AED/FFFFFF?text=Pixel+Quest',
-          coverUrl: 'https://via.placeholder.com/1200x600/7C3AED/FFFFFF?text=Pixel+Quest',
-          features: ['60+ Levels', 'Boss Battles', 'Speedrun Mode'],
-          technologies: ['Unity', 'C#', 'Aseprite'],
-          releaseDate: '2025-06-15',
-          platforms: ['Steam', 'Nintendo Switch'],
-          gallery: []
+          tags: ['Platformer', 'Retro', 'Co-op'],
+          description: 'A charming retro 2D platformer with challenging co-op levels.',
+          thumbnailUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=400&h=225&fit=crop',
+          coverUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800&h=450&fit=crop',
+          features: ['Local Co-op', 'Pixel Art Graphics', 'Secret Levels'],
+          technologies: ['Godot Engine', 'GDScript'],
+          releaseDate: '2023-05-01',
+          platforms: ['PC', 'Nintendo Switch'],
+          gallery: [],
+          mediaGallery: [
+            { type: 'image', url: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800&h=450&fit=crop', caption: 'Level 3 screenshot' }
+          ],
+          downloadLink: '',
+          videoLink: '',
+          ratings: { total: 40, count: 10, average: 4.0, breakdown: { 1: 0, 2: 0, 3: 2, 4: 4, 5: 4 } }
         }
       ];
       
-      await Project.insertMany(defaultProjects);
-      
-      // Create default admin user
-      const defaultUser = new User({
-        username: 'technest_admin_2025',
-        password: 'TN@SecurePass#2025!Admin',
-        role: 'Admin'
-      });
-      
-      await defaultUser.save();
+      for (const projectData of defaultProjects) {
+        const project = new Project(projectData);
+        await project.save();
+      }
       
       console.log('✅ Default data initialized successfully');
     }
   } catch (error) {
-    console.error('❌ Error initializing data:', error);
+    console.error('❌ Error initializing default data:', error);
   }
 }
 
-// Initialize data on startup
+// Start initialization
 initializeData();
 
-// Serve uploaded files
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-app.use('/uploads', express.static(uploadsDir));
+// Middleware to serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Middleware to check for authentication (simple check for admin access)
+const isAuthenticated = (req, res, next) => {
+  // In a real app, this would involve JWT or session checks
+  // For this example, we'll allow all requests to pass for simplicity
+  // The frontend handles the simple login state
+  next();
+};
 
-const upload = multer({ 
-  storage,
-  limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
-});
-
-// WebSocket connection
+// Socket.io connection
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+  console.log('A user connected to socket.io');
   
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('User disconnected from socket.io');
   });
 });
 
-// Broadcast data changes to all connected clients
-function broadcastUpdate(type, data) {
-  io.emit('data-update', { type, data });
-}
+// Function to broadcast updates to all connected clients
+const broadcastUpdate = (key, data) => {
+  io.emit('dataUpdate', { key, data });
+};
 
-// API Routes
+// ===== API Endpoints =====
 
-// Get all site data
+// General data endpoint
 app.get('/api/data', async (req, res) => {
   try {
     const siteData = await SiteData.findOne();
@@ -334,24 +388,30 @@ app.get('/api/data', async (req, res) => {
     const messages = await Message.find();
     const applications = await Application.find();
     const projectSubmissions = await ProjectSubmission.find();
-    const testimonialSubmissions = await TestimonialSubmission.find({ approved: false });
-    const users = await User.find().select('-password');
+    const users = await User.find();
+    const ratings = await Rating.find();
+    const testimonialSubmissions = await TestimonialSubmission.find();
+    const liveNotifications = await LiveNotification.find();
+    const chatbotConversations = await ChatbotConversation.find();
     
     res.json({
-      ...siteData.toObject(),
+      siteData,
       projects,
       messages,
       applications,
       projectSubmissions,
+      users,
+      ratings,
       testimonialSubmissions,
-      users
+      liveNotifications,
+      chatbotConversations
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update intro settings
+// Intro endpoints
 app.put('/api/intro', async (req, res) => {
   try {
     const siteData = await SiteData.findOne();
@@ -364,7 +424,7 @@ app.put('/api/intro', async (req, res) => {
   }
 });
 
-// Home page endpoints
+// Home endpoints
 app.put('/api/home/hero', async (req, res) => {
   try {
     const siteData = await SiteData.findOne();
@@ -413,7 +473,7 @@ app.put('/api/home/partners', async (req, res) => {
   }
 });
 
-// Projects endpoints
+// Project endpoints
 app.get('/api/projects', async (req, res) => {
   try {
     const projects = await Project.find();
@@ -425,11 +485,11 @@ app.get('/api/projects', async (req, res) => {
 
 app.post('/api/projects', async (req, res) => {
   try {
-    const newProject = new Project(req.body);
-    await newProject.save();
+    const project = new Project(req.body);
+    await project.save();
     const projects = await Project.find();
     broadcastUpdate('projects', projects);
-    res.json(newProject);
+    res.json(project);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -438,13 +498,9 @@ app.post('/api/projects', async (req, res) => {
 app.put('/api/projects/:id', async (req, res) => {
   try {
     const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (project) {
-      const projects = await Project.find();
-      broadcastUpdate('projects', projects);
-      res.json(project);
-    } else {
-      res.status(404).json({ error: 'Project not found' });
-    }
+    const projects = await Project.find();
+    broadcastUpdate('projects', projects);
+    res.json(project);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -461,40 +517,23 @@ app.delete('/api/projects/:id', async (req, res) => {
   }
 });
 
-// Rate a project
 app.post('/api/projects/:id/rate', async (req, res) => {
   try {
     const { rating, userName, userEmail } = req.body;
     const projectId = req.params.id;
-    const userIp = req.ip || req.connection.remoteAddress;
-    
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
-    }
-    
-    if (!userName || !userEmail) {
-      return res.status(400).json({ error: 'Name and email are required' });
-    }
     
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
     
-    // Check if user already rated (by email)
-    const existingRating = await Rating.findOne({ projectId, userEmail });
-    if (existingRating) {
-      return res.status(400).json({ error: 'You have already rated this project' });
-    }
-    
-    // Create rating record
+    // Create new rating
     const newRating = new Rating({
       projectId,
+      rating,
       userName,
       userEmail,
-      rating,
-      userIp,
-      approved: true
+      date: new Date()
     });
     await newRating.save();
     
@@ -751,36 +790,13 @@ app.put('/api/technologies', async (req, res) => {
 });
 
 // Blog endpoints
-app.get('/api/blog', async (req, res) => {
-  try {
-    const siteData = await SiteData.findOne();
-    res.json(siteData.blog || []);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/blog/:id', async (req, res) => {
-  try {
-    const siteData = await SiteData.findOne();
-    const post = siteData.blog.find(p => p.id === req.params.id);
-    if (post) {
-      res.json(post);
-    } else {
-      res.status(404).json({ error: 'Post not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.post('/api/blog', async (req, res) => {
   try {
     const siteData = await SiteData.findOne();
     const newPost = {
       id: Date.now().toString(),
       ...req.body,
-      date: req.body.date || new Date().toISOString().split('T')[0]
+      date: new Date().toISOString().split('T')[0]
     };
     siteData.blog.push(newPost);
     await siteData.save();
@@ -915,7 +931,23 @@ app.get('/api/visitors', async (req, res) => {
 
 app.get('/api/visitors/stats', async (req, res) => {
   try {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Count visitors in last 5 minutes as "current"
+    const currentVisitors = await Visitor.countDocuments({
+      visitTime: { $gte: fiveMinutesAgo }
+    });
+    
+    // Count today's visitors
+    const totalToday = await Visitor.countDocuments({
+      visitTime: { $gte: today }
+    });
+    
+    // Total all-time visitors
     const totalVisitors = await Visitor.countDocuments();
+    
     const uniqueIPs = await Visitor.distinct('ip');
     const countries = await Visitor.aggregate([
       { $group: { _id: '$country', count: { $sum: 1 } } },
@@ -935,6 +967,8 @@ app.get('/api/visitors/stats', async (req, res) => {
     ]);
     
     res.json({
+      currentVisitors,
+      totalToday,
       totalVisitors,
       uniqueVisitors: uniqueIPs.length,
       topCountries: countries,
@@ -1127,14 +1161,32 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// File upload endpoint
+// File upload endpoint (for images/videos/general files)
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (req.file) {
     const fileUrl = `/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl, filename: req.file.filename });
+    res.json({ url: fileUrl, filename: req.file.filename, size: req.file.size, mimeType: req.file.mimetype });
   } else {
     res.status(400).json({ error: 'No file uploaded' });
   }
+});
+
+// Endpoint to handle download file link (MediaFire/MEGA)
+app.post('/api/upload/link', async (req, res) => {
+  const { link, filename } = req.body;
+  if (!link || !filename) {
+    return res.status(400).json({ error: 'Link and filename are required' });
+  }
+  
+  // In a real-world scenario, you might want to validate the link format 
+  // or even download the file to check its integrity/size.
+  // For this task, we will simply store the link as the "file URL".
+  
+  // We will assume the link is the final download URL.
+  // The frontend will handle the direct download logic.
+  
+  // For the purpose of this API, we return the link as the "url"
+  res.json({ url: link, filename: filename, isExternal: true });
 });
 
 // Serve static files from dist folder (production build)
@@ -1321,11 +1373,7 @@ app.post('/api/notifications', async (req, res) => {
 // Update a live notification
 app.put('/api/notifications/:id', async (req, res) => {
   try {
-    const notification = await LiveNotification.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const notification = await LiveNotification.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(notification);
   } catch (error) {
     console.error('Error updating notification:', error);
@@ -1344,156 +1392,18 @@ app.delete('/api/notifications/:id', async (req, res) => {
   }
 });
 
-// Catch-all route for React Router - MUST be last
+// Fallback for all other routes to serve the index.html (for client-side routing)
 app.get('*', (req, res) => {
-  const indexPath = fs.existsSync(path.join(distPath, 'index.html'))
-    ? path.join(distPath, 'index.html')
-    : path.join(__dirname, 'index.html');
-  res.sendFile(indexPath);
+  const indexPath = path.join(__dirname, 'dist', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  }
 });
 
+// Start the server
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
-
-
-// ===== CHATBOT CONVERSATIONS API =====
-
-// Get all chatbot conversations
-app.get('/api/chatbot/conversations', async (req, res) => {
-  try {
-    const { page = 1, limit = 20, sortBy = 'date', order = -1 } = req.query;
-    const skip = (page - 1) * limit;
-    const conversations = await ChatbotConversation.find()
-      .sort({ [sortBy]: order })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await ChatbotConversation.countDocuments();
-
-    res.json({
-      conversations,
-      pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching conversations:', error);
-    res.status(500).json({ error: 'Failed to fetch conversations' });
-  }
-});
-
-// Get conversation statistics
-app.get('/api/chatbot/conversations/stats', async (req, res) => {
-  try {
-    const total = await ChatbotConversation.countDocuments();
-    const avgResponseTime = await ChatbotConversation.aggregate([
-      { $group: { _id: null, avgTime: { $avg: '$responseTime' } } }
-    ]);
-
-    const conversationsWithImages = await ChatbotConversation.countDocuments({ imageUrl: { $exists: true, $ne: null } });
-
-    res.json({
-      totalConversations: total,
-      conversationsWithImages,
-      averageResponseTime: avgResponseTime[0]?.avgTime || 0
-    });
-  } catch (error) {
-    console.error('Error fetching stats:', error);
-    res.status(500).json({ error: 'Failed to fetch statistics' });
-  }
-});
-
-// Get single conversation
-app.get('/api/chatbot/conversations/:id', async (req, res) => {
-  try {
-    const conversation = await ChatbotConversation.findById(req.params.id);
-    if (!conversation) {
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-    res.json(conversation);
-  } catch (error) {
-    console.error('Error fetching conversation:', error);
-    res.status(500).json({ error: 'Failed to fetch conversation' });
-  }
-});
-
-// Update conversation (for rating, feedback, etc.)
-app.put('/api/chatbot/conversations/:id', async (req, res) => {
-  try {
-    const { rating, userFeedback, isUsefulForTraining, flaggedForReview, reviewNotes } = req.body;
-    
-    const conversation = await ChatbotConversation.findByIdAndUpdate(
-      req.params.id,
-      {
-        rating,
-        userFeedback,
-        isUsefulForTraining,
-        flaggedForReview,
-        reviewNotes
-      },
-      { new: true }
-    );
-
-    if (!conversation) {
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-
-    res.json(conversation);
-  } catch (error) {
-    console.error('Error updating conversation:', error);
-    res.status(500).json({ error: 'Failed to update conversation' });
-  }
-});
-
-// Delete conversation
-app.delete('/api/chatbot/conversations/:id', async (req, res) => {
-  try {
-    const conversation = await ChatbotConversation.findByIdAndDelete(req.params.id);
-    if (!conversation) {
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-    res.json({ message: 'Conversation deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting conversation:', error);
-    res.status(500).json({ error: 'Failed to delete conversation' });
-  }
-});
-
-// Search conversations
-app.get('/api/chatbot/conversations/search/:query', async (req, res) => {
-  try {
-    const { query } = req.params;
-    const conversations = await ChatbotConversation.find({
-      $or: [
-        { userMessage: { $regex: query, $options: 'i' } },
-        { botResponse: { $regex: query, $options: 'i' } }
-      ]
-    }).limit(50);
-
-    res.json(conversations);
-  } catch (error) {
-    console.error('Error searching conversations:', error);
-    res.status(500).json({ error: 'Failed to search conversations' });
-  }
-});
-
-// Export conversations for training
-app.get('/api/chatbot/conversations/export/json', async (req, res) => {
-  try {
-    const conversations = await ChatbotConversation.find({ isUsefulForTraining: true });
-    
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', 'attachment; filename="chatbot-conversations.json"');
-    res.json(conversations);
-  } catch (error) {
-    console.error('Error exporting conversations:', error);
-    res.status(500).json({ error: 'Failed to export conversations' });
-  }
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
