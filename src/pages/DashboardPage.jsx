@@ -423,6 +423,78 @@ function ProjectsContent({ siteData, apiUrl, toast }) {
   const [projects, setProjects] = useState(siteData.projects || []);
   const [editingProject, setEditingProject] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (file, fieldName, isDownloadFile = false) => {
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${apiUrl}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const fileUrl = result.url;
+        
+        if (isDownloadFile) {
+          setEditingProject(prev => ({ ...prev, downloadLink: fileUrl }));
+        } else if (fieldName === 'thumbnailUrl') {
+          setEditingProject(prev => ({ ...prev, thumbnailUrl: fileUrl }));
+        } else if (fieldName === 'coverUrl') {
+          setEditingProject(prev => ({ ...prev, coverUrl: fileUrl }));
+        } else if (fieldName.startsWith('mediaGallery')) {
+          const index = parseInt(fieldName.split('-')[1]);
+          const updatedGallery = [...(editingProject.mediaGallery || [])];
+          updatedGallery[index] = { ...updatedGallery[index], url: fileUrl };
+          setEditingProject(prev => ({ ...prev, mediaGallery: updatedGallery }));
+        }
+        
+        toast({ title: 'Success', description: `File uploaded successfully: ${result.filename}` });
+      } else {
+        const errorData = await response.json();
+        toast({ title: 'Upload Failed', description: errorData.error || 'An error occurred during upload', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Network error during file upload', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleExternalLinkUpload = async (link, filename) => {
+    if (!link || !filename) {
+      toast({ title: 'Error', description: 'Link and filename are required for external link', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await fetch(`${apiUrl}/api/upload/link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link, filename }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setEditingProject(prev => ({ ...prev, downloadLink: result.url }));
+        toast({ title: 'Success', description: `External link saved: ${filename}` });
+      } else {
+        const errorData = await response.json();
+        toast({ title: 'Error', description: errorData.error || 'Failed to save external link', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Network error during external link save', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const addProject = () => {
     const newProject = {
@@ -447,7 +519,7 @@ function ProjectsContent({ siteData, apiUrl, toast }) {
   };
 
   const addMediaToGallery = () => {
-    const newMedia = { type: 'image', url: '', caption: '' };
+    const newMedia = { type: 'image', url: '', caption: '', uploadType: 'url' }; // Added uploadType
     setEditingProject({
       ...editingProject,
       mediaGallery: [...(editingProject.mediaGallery || []), newMedia]
@@ -586,14 +658,67 @@ function ProjectsContent({ siteData, apiUrl, toast }) {
                   onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Thumbnail URL</label>
+              
+              {/* Thumbnail Upload/URL */}
+              <div className="border p-3 rounded-lg space-y-2">
+                <label className="block text-sm font-medium mb-1">Thumbnail Image</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e.target.files[0], 'thumbnailUrl')}
+                    disabled={uploading}
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={() => document.getElementById('thumbnailUrlInput').click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? 'Uploading...' : 'Upload File'}
+                  </Button>
+                </div>
                 <Input
+                  id="thumbnailUrlInput"
                   value={editingProject.thumbnailUrl}
                   onChange={(e) => setEditingProject({ ...editingProject, thumbnailUrl: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
+                  placeholder="Or enter Thumbnail URL (e.g., https://example.com/image.jpg)"
+                  className="mt-2"
                 />
+                {editingProject.thumbnailUrl && (
+                  <p className="text-xs text-muted-foreground truncate">Current: {editingProject.thumbnailUrl}</p>
+                )}
               </div>
+              
+              {/* Cover Image Upload/URL */}
+              <div className="border p-3 rounded-lg space-y-2">
+                <label className="block text-sm font-medium mb-1">Cover Image</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e.target.files[0], 'coverUrl')}
+                    disabled={uploading}
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={() => document.getElementById('coverUrlInput').click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? 'Uploading...' : 'Upload File'}
+                  </Button>
+                </div>
+                <Input
+                  id="coverUrlInput"
+                  value={editingProject.coverUrl || ''}
+                  onChange={(e) => setEditingProject({ ...editingProject, coverUrl: e.target.value })}
+                  placeholder="Or enter Cover Image URL (e.g., https://example.com/cover.jpg)"
+                  className="mt-2"
+                />
+                {editingProject.coverUrl && (
+                  <p className="text-xs text-muted-foreground truncate">Current: {editingProject.coverUrl}</p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-1">Tags (comma-separated)</label>
                 <Input
@@ -634,24 +759,44 @@ function ProjectsContent({ siteData, apiUrl, toast }) {
                   placeholder="PC, PlayStation, Xbox, Mobile"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Cover Image URL</label>
-                <Input
-                  value={editingProject.coverUrl || ''}
-                  onChange={(e) => setEditingProject({ ...editingProject, coverUrl: e.target.value })}
-                  placeholder="https://example.com/cover.jpg"
-                />
+              
+              {/* Download Link/File Upload */}
+              <div className="border p-3 rounded-lg space-y-2">
+                <label className="block text-sm font-medium mb-1">Download File/Link</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    onChange={(e) => handleFileUpload(e.target.files[0], 'downloadLink', true)}
+                    disabled={uploading}
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={() => document.getElementById('downloadFileInput').click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? 'Uploading...' : 'Upload File'}
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Input
+                    id="downloadLinkInput"
+                    value={editingProject.downloadLink || ''}
+                    onChange={(e) => setEditingProject({ ...editingProject, downloadLink: e.target.value })}
+                    placeholder="Or enter External Download Link (MediaFire, MEGA, etc.)"
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={() => handleExternalLinkUpload(editingProject.downloadLink, editingProject.title + '-download')}
+                    disabled={uploading || !editingProject.downloadLink || !editingProject.title}
+                  >
+                    Save Link
+                  </Button>
+                </div>
+                {editingProject.downloadLink && (
+                  <p className="text-xs text-muted-foreground truncate">Current: {editingProject.downloadLink}</p>
+                )}
               </div>
 
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Download Link (optional)</label>
-                <Input
-                  value={editingProject.downloadLink || ''}
-                  onChange={(e) => setEditingProject({ ...editingProject, downloadLink: e.target.value })}
-                  placeholder="https://example.com/download/game.zip"
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Video Link (optional)</label>
                 <Input
@@ -691,10 +836,29 @@ function ProjectsContent({ siteData, apiUrl, toast }) {
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
+                      
+                      {/* Media Gallery Upload/URL */}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept={media.type === 'image' ? 'image/*' : 'video/*'}
+                          onChange={(e) => handleFileUpload(e.target.files[0], `mediaGallery-${index}`)}
+                          disabled={uploading}
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={() => document.getElementById(`mediaGalleryFile-${index}`).click()}
+                          disabled={uploading}
+                        >
+                          {uploading ? 'Uploading...' : 'Upload File'}
+                        </Button>
+                      </div>
                       <Input
+                        id={`mediaGalleryFile-${index}`}
                         placeholder={`${media.type === 'image' ? 'Image' : 'Video'} URL`}
                         value={media.url}
                         onChange={(e) => updateMediaInGallery(index, 'url', e.target.value)}
+                        className="mt-2"
                       />
                       <Input
                         placeholder="Caption (optional)"
@@ -706,9 +870,9 @@ function ProjectsContent({ siteData, apiUrl, toast }) {
                 </div>
               </div>
 
-              <Button onClick={saveProject} className="w-full">
+              <Button onClick={saveProject} className="w-full" disabled={uploading}>
                 <Save className="mr-2 h-4 w-4" />
-                Save Project
+                {uploading ? 'Please wait for upload...' : 'Save Project'}
               </Button>
             </div>
           )}
