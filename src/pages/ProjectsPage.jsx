@@ -192,45 +192,58 @@ export default function ProjectsPage({ projects }) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-2xl hover:shadow-primary/20"
-              onClick={() => setSelectedProject(project)}
-            >
-              {/* Image Container with Enhanced Effects */}
-              <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20">
-                <img
-                  src={project.thumbnailUrl}
-                  alt={project.title}
-                  className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-500 ease-out"
-                />
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex flex-col items-center gap-3"
-                  >
-                    <div className="bg-primary/90 backdrop-blur-sm p-3 rounded-full">
-                      <Play className="h-8 w-8 text-white fill-white" />
-                    </div>
-                    <span className="text-white text-sm font-semibold">View Details</span>
+              className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary transition-all duration-300">
+              <div className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300 bg-gradient-to-br from-card to-card/80 group h-full flex flex-col border border-primary/10 hover:border-primary/30">
+                <div className="relative h-72 overflow-hidden bg-gradient-to-br from-primary/30 to-secondary/30">
+                  <img
+                    src={project.thumbnailUrl}
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                  />
+                  {/* Enhanced Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                    <motion.div
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      whileInView={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="flex flex-col items-center gap-3"
+                    >
+                      <motion.div
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="bg-gradient-to-r from-primary to-secondary backdrop-blur-md p-4 rounded-full shadow-lg"
+                      >
+                        <Play className="h-8 w-8 text-white fill-white" />
+                      </motion.div>
+                      <span className="text-white text-sm font-bold tracking-wide">View Details</span>
+                    </motion.div>
+                  </div>             
+                {/* Rating Badge - Enhanced with Animation */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  className="absolute top-4 left-4 bg-gradient-to-r from-primary via-secondary to-primary backdrop-blur-lg px-4 py-2 rounded-full flex items-center gap-2 shadow-xl border border-primary/20 hover:border-primary/50 transition-all"
+                >
+                  <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                    <Star className="h-4 w-4 fill-yellow-300 text-yellow-300" />
                   </motion.div>
-                </div>
-                
-                {/* Rating Badge - Enhanced */}
-                <div className="absolute top-4 left-4 bg-gradient-to-r from-primary to-secondary backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                  <Star className="h-3.5 w-3.5 fill-yellow-300 text-yellow-300" />
                   <span className="text-xs font-bold text-white">
                     {project.ratings?.average ? project.ratings.average.toFixed(1) : '0.0'}
                   </span>
-                  <span className="text-xs text-white/80">({project.ratings?.count || 0})</span>
-                </div>
+                  <span className="text-xs text-white/90">({project.ratings?.count || 0})</span>
+                </motion.div>
                 
                 {/* Type Badge - Enhanced */}
-                <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
-                  <Badge variant="outline" className="border-primary text-primary text-xs font-semibold">
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="absolute top-4 right-4 bg-background/90 backdrop-blur-lg px-3 py-1.5 rounded-full border border-primary/20 hover:border-primary/50 transition-all"
+                >
+                  <Badge variant="outline" className="border-primary text-primary text-xs font-bold tracking-wide">
                     {project.type}
                   </Badge>
-                </div>
+                </motion.div>
               </div>
               
               {/* Content Container */}
