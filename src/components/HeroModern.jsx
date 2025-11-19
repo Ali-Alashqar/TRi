@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 export default function HeroModern({ hero }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -15,62 +16,100 @@ export default function HeroModern({ hero }) {
       });
     };
 
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5">
-        {/* Floating Orbs */}
+      {/* Animated Background with Enhanced Gradients */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/10">
+        {/* Floating Orbs - Enhanced */}
         <motion.div
           animate={{
-            x: [0, 100, 0],
-            y: [0, -100, 0],
+            x: [0, 150, -100, 0],
+            y: [0, -150, 100, 0],
+            scale: [1, 1.2, 0.9, 1]
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-primary/20 to-secondary/10 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -150, 100, 0],
+            y: [0, 150, -100, 0],
+            scale: [1, 0.9, 1.2, 1]
           }}
           transition={{
             duration: 20,
             repeat: Infinity,
-            ease: "linear"
+            ease: "easeInOut"
           }}
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-secondary/20 to-primary/10 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
-            x: [0, -100, 0],
-            y: [0, 100, 0],
+            x: [0, 100, -50, 0],
+            y: [0, 100, -150, 0],
           }}
           transition={{
-            duration: 15,
+            duration: 30,
             repeat: Infinity,
-            ease: "linear"
+            ease: "easeInOut"
           }}
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+          className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-r from-primary/10 to-transparent rounded-full blur-3xl"
         />
 
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:64px_64px]" />
+        {/* Enhanced Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:64px_64px]" />
+        
+        {/* Radial Gradient Overlay */}
+        <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-background/50" />
       </div>
 
-      {/* Parallax Elements */}
+      {/* Parallax Elements - Enhanced */}
       <motion.div
         style={{
           x: mousePosition.x,
-          y: mousePosition.y
+          y: mousePosition.y,
+          y: scrollY * 0.5
         }}
         className="absolute inset-0 pointer-events-none"
       >
-        <Gamepad2 className="absolute top-1/4 left-1/4 w-16 h-16 text-primary/20" />
-        <Sparkles className="absolute bottom-1/3 right-1/3 w-12 h-12 text-primary/20" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-1/4 left-1/4 w-16 h-16 text-primary/30"
+        >
+          <Gamepad2 className="w-full h-full" />
+        </motion.div>
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-1/3 right-1/3 w-12 h-12 text-primary/30"
+        >
+          <Sparkles className="w-full h-full" />
+        </motion.div>
       </motion.div>
 
-      {/* Content */}
+      {/* Content - Enhanced */}
       <div className="relative z-10 container mx-auto px-4 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 1, ease: "easeOut" }}
           className="space-y-8"
         >
           {/* Badge */}
